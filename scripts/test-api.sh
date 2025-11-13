@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to test the API endpoints
+# Script to test the HelloWorld API endpoints
 # Usage: ./scripts/test-api.sh [token]
 
 API_URL=${API_URL:-http://localhost:3000}
@@ -13,7 +13,7 @@ if [ -z "$TOKEN" ]; then
   exit 1
 fi
 
-echo "Testing API at: $API_URL"
+echo "Testing HelloWorld API at: $API_URL"
 echo ""
 
 # Health check
@@ -21,58 +21,79 @@ echo "1. Health Check (no auth required):"
 curl -s "${API_URL}/health" | jq '.'
 echo ""
 
-# Create a task
-echo "2. Creating a task:"
-TASK_RESPONSE=$(curl -s -X POST "${API_URL}/api/tasks" \
+# Create a HelloWorld instance
+echo "2. Creating a HelloWorld instance:"
+HELLO_RESPONSE=$(curl -s -X POST "${API_URL}/api/hello-worlds" \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{
-    "title": "Test Task",
-    "description": "This is a test task created by the test script",
-    "status": "TODO",
-    "priority": "HIGH"
+    "username": "TestUser"
   }')
 
-echo $TASK_RESPONSE | jq '.'
-TASK_ID=$(echo $TASK_RESPONSE | jq -r '.id')
+echo $HELLO_RESPONSE | jq '.'
+HELLO_ID=$(echo $HELLO_RESPONSE | jq -r '.id')
 echo ""
 
-if [ "$TASK_ID" != "null" ] && [ -n "$TASK_ID" ]; then
-  # Get the task
-  echo "3. Getting task by ID ($TASK_ID):"
-  curl -s "${API_URL}/api/tasks/${TASK_ID}" \
+if [ "$HELLO_ID" != "null" ] && [ -n "$HELLO_ID" ]; then
+  # Get the HelloWorld instance
+  echo "3. Getting HelloWorld by ID ($HELLO_ID):"
+  curl -s "${API_URL}/api/hello-worlds/${HELLO_ID}" \
     -H "Authorization: Bearer $TOKEN" | jq '.'
   echo ""
 
-  # Update the task
-  echo "4. Updating task:"
-  curl -s -X PUT "${API_URL}/api/tasks/${TASK_ID}" \
+  # Say hello (first time - should work)
+  echo "4. Saying hello (first time):"
+  curl -s -X POST "${API_URL}/api/hello-worlds/${HELLO_ID}/say-hello" \
+    -H "Authorization: Bearer $TOKEN" | jq '.'
+  echo ""
+
+  # Try to say hello again (should fail)
+  echo "5. Trying to say hello again (should fail):"
+  curl -s -X POST "${API_URL}/api/hello-worlds/${HELLO_ID}/say-hello" \
+    -H "Authorization: Bearer $TOKEN" | jq '.'
+  echo ""
+
+  # Get all user's HelloWorld instances
+  echo "6. Getting all user's HelloWorld instances:"
+  curl -s "${API_URL}/api/hello-worlds" \
+    -H "Authorization: Bearer $TOKEN" | jq '.'
+  echo ""
+
+  # Create another HelloWorld instance
+  echo "7. Creating another HelloWorld instance:"
+  HELLO_RESPONSE2=$(curl -s -X POST "${API_URL}/api/hello-worlds" \
     -H "Authorization: Bearer $TOKEN" \
     -H 'Content-Type: application/json' \
     -d '{
-      "title": "Updated Test Task",
-      "status": "IN_PROGRESS"
-    }' | jq '.'
+      "username": "AnotherUser"
+    }')
+
+  echo $HELLO_RESPONSE2 | jq '.'
+  HELLO_ID2=$(echo $HELLO_RESPONSE2 | jq -r '.id')
   echo ""
 
-  # Get all tasks
-  echo "5. Getting all tasks (paginated):"
-  curl -s "${API_URL}/api/tasks?page=1&limit=5" \
-    -H "Authorization: Bearer $TOKEN" | jq '.'
-  echo ""
+  if [ "$HELLO_ID2" != "null" ] && [ -n "$HELLO_ID2" ]; then
+    # Say hello with the new instance
+    echo "8. Saying hello with the second HelloWorld instance:"
+    curl -s -X POST "${API_URL}/api/hello-worlds/${HELLO_ID2}/say-hello" \
+      -H "Authorization: Bearer $TOKEN" | jq '.'
+    echo ""
 
-  # Delete the task
-  echo "6. Deleting task:"
-  curl -s -X DELETE "${API_URL}/api/tasks/${TASK_ID}" \
+    # Delete the second HelloWorld instance
+    echo "9. Deleting second HelloWorld instance:"
+    curl -s -X DELETE "${API_URL}/api/hello-worlds/${HELLO_ID2}" \
+      -H "Authorization: Bearer $TOKEN"
+    echo "HelloWorld deleted"
+    echo ""
+  fi
+
+  # Delete the first HelloWorld instance
+  echo "10. Deleting first HelloWorld instance:"
+  curl -s -X DELETE "${API_URL}/api/hello-worlds/${HELLO_ID}" \
     -H "Authorization: Bearer $TOKEN"
-  echo "Task deleted"
+  echo "HelloWorld deleted"
   echo ""
 
-  # Restore the task
-  echo "7. Restoring task:"
-  curl -s -X POST "${API_URL}/api/tasks/${TASK_ID}/restore" \
-    -H "Authorization: Bearer $TOKEN" | jq '.'
-  echo ""
 else
-  echo "Failed to create task. Check your authentication."
+  echo "Failed to create HelloWorld instance. Check your authentication."
 fi

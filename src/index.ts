@@ -9,7 +9,7 @@ import { logger } from './config/logger';
 import { swaggerSpec } from './config/swagger';
 import { contextMiddleware } from './middleware/context.middleware';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
-import taskController from './controllers/TaskController';
+import helloWorldController from './controllers/HelloWorldController';
 
 // Load environment variables
 dotenv.config();
@@ -36,7 +36,7 @@ app.get('/health', (req, res) => {
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // API Routes
-app.use('/api/tasks', taskController);
+app.use('/api/hello-worlds', helloWorldController);
 
 // Error handling
 app.use(notFoundHandler);

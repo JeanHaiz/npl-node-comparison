@@ -3,6 +3,11 @@
 # Script to get JWT token from Keycloak
 # Usage: ./scripts/get-token.sh [username] [password]
 
+# Load environment variables from .env file
+if [ -f .env ]; then
+  export $(grep -v '^#' .env | xargs)
+fi
+
 USERNAME=${1:-testuser}
 PASSWORD=${2:-testpass}
 CLIENT_ID=${KEYCLOAK_CLIENT_ID:-node-api-client}

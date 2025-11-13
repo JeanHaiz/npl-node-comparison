@@ -5,6 +5,7 @@ import { logger } from '../config/logger';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
+    userId: string;
     sub: string;
     email?: string;
     preferred_username?: string;
@@ -66,9 +67,13 @@ export const authenticate = async (
           return res.status(401).json({ error: 'Invalid token' });
         }
 
-        req.user = decoded as AuthenticatedRequest['user'];
+        const decodedUser = decoded as any;
+        req.user = {
+          ...decodedUser,
+          userId: decodedUser.sub,
+        };
         logger.info('User authenticated', {
-          userId: req.user?.sub,
+          userId: req.user?.userId,
           email: req.user?.email,
         });
         next();
@@ -132,7 +137,11 @@ export const optionalAuth = async (
       },
       (err, decoded) => {
         if (!err) {
-          req.user = decoded as AuthenticatedRequest['user'];
+          const decodedUser = decoded as any;
+          req.user = {
+            ...decodedUser,
+            userId: decodedUser.sub,
+          };
         }
         next();
       }
